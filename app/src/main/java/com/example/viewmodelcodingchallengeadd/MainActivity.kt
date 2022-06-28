@@ -1,9 +1,11 @@
+@file:Suppress("RedundantSamConstructor")
+
 package com.example.viewmodelcodingchallengeadd
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.databinding.DataBindingUtil
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.example.viewmodelcodingchallengeadd.databinding.ActivityMainBinding
 import com.example.viewmodelcodingchallengeadd.factory.MainViewModelFactory
@@ -11,10 +13,13 @@ import com.example.viewmodelcodingchallengeadd.viewmodel.MainViewModel
 
 /**
  * Basic example again of how we can use ViewModels with our UI to hold our business logic.
+ *
+ * We have incorporated using a Factory class, as well as LiveData as well, as we know
+ * they all pretty much go hand in hand.
  */
 class MainActivity : AppCompatActivity() {
 
-    // databinding variable
+    // DataBinding variable
     private lateinit var binding: ActivityMainBinding
 
     // ViewModel variable
@@ -29,10 +34,6 @@ class MainActivity : AppCompatActivity() {
 
         // use the apply scope method to apply binding to all views
         binding.apply {
-
-            // create reference to our ViewModel
-            viewModel = ViewModelProvider(this@MainActivity).get(MainViewModel::class.java)
-
             /**
              * Here we show how we can pass in and initialize our startTotal
              * from our constructor in our ViewModel.
@@ -40,18 +41,24 @@ class MainActivity : AppCompatActivity() {
              * and used our Factory class to create an instance of it.
              */
             viewModelFactory = MainViewModelFactory(125)
+            // create reference to our ViewModel, and index our factory class
+            viewModel = ViewModelProvider(
+                this@MainActivity, viewModelFactory)[MainViewModel::class.java]
 
-            // set the TextView to the total Value
-            tvAddNumber.text = viewModel.returnTotalValue().toString()
+            /**
+             * Here below we will write code to update the TextView with the changes
+             * made in the edit Text. LiveData automatically updates views so we no longer
+             * need to set the View after a change.
+             */
+            viewModel.total.observe(this@MainActivity, Observer {
+                tvAddNumber.text = it.toString()
+            })
 
             //prepare our button and set it to click functionality
             button.setOnClickListener {
 
                 // set the total value = to our edit text and cast it to a string
                 viewModel.setTotalValue(etNumber.text.toString().toInt())
-
-                // set the TextView to the total value now
-                tvAddNumber.text = viewModel.returnTotalValue().toString()
             }
         }
     }
